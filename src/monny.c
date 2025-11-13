@@ -1,5 +1,6 @@
 #include <monny.h>
 #include <scanner.h>
+#include <parser.h>
 
 struct MonnyState
 {
@@ -74,20 +75,14 @@ int monny_load_file(MonnyState *M, const char *filename)
     Token *tokens = getTokens(scanner);
     size_t tokensCount = getTokensCount(scanner);
 
-    for(size_t i = 0; i < tokensCount; i++)
-    {
-        printf("Token LEXEME: %s\n", (tokens + i)->lexeme);
-        if ((tokens + i)->type == TK_STRING)
-        {
-            printf("valor: %s\n", (tokens + i)->literal.string);
-        }
-        else if ((tokens + i)->type == TK_NUMBER)
-        {
-            printf("valor: %2f\n", (tokens + i)->literal.number);
-        }
-    }
+    Parser *parser = createParser(tokens, tokensCount);
+    ASTNode *node = parse(parser);
+
+    printf("Node Type: %s\n", getTypeAST(node));
 
     free(source);
+    freeAST(node);
+    destroyParser(parser);
     destroyScanner(scanner);
 
     return 0;

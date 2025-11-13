@@ -16,7 +16,7 @@ static KeyWords keyWords[] = {
     {"true", TK_TRUE},
     {"false", TK_FALSE},
     {"nil", TK_NIL},
-};
+    {NULL, TK_EOF}};
 
 struct Scanner
 {
@@ -59,6 +59,24 @@ void destroyScanner(Scanner *scanner)
 {
     if (scanner->last_error)
         free(scanner->last_error);
+
+    size_t i;
+    for (i = 0; i < scanner->token_count; i++)
+    {
+        Token *token = &scanner->tokens[i];
+        if (token->lexeme != NULL)
+        {
+            free((void *)token->lexeme);
+            token->lexeme = NULL;
+        }
+
+        if (token->type == TK_STRING && token->literal.string != NULL)
+        {
+            free((void *)token->literal.string);
+            token->literal.string = NULL;
+        }
+    }
+
     if (scanner->tokens)
         free(scanner->tokens);
     free(scanner);
@@ -129,7 +147,8 @@ int string(Scanner *scanner)
 
     if (isAtEnd(scanner))
     {
-        if (scanner->last_error) free(scanner->last_error);
+        if (scanner->last_error)
+            free(scanner->last_error);
         scanner->last_error = strdup("String nunca fechada!");
         return -1;
     }
@@ -203,11 +222,11 @@ void identifier(Scanner *scanner)
     text[length] = '\0';
 
     TokenType type = TK_IDENTIFIER;
-    for (KeyWords *kw = keyWords; kw->name != NULL; kw++)
+    for (int i = 0; keyWords[i].name != NULL; i++) // ← CORREÇÃO
     {
-        if (strcmp(text, kw->name) == 0)
+        if (strcmp(text, keyWords[i].name) == 0)
         {
-            type = kw->type;
+            type = keyWords[i].type;
             break;
         }
     }
