@@ -78,8 +78,6 @@ int monny_load_file(MonnyState *M, const char *filename)
     Parser *parser = createParser(tokens, tokensCount);
     ASTNode *node = parse(parser);
 
-    printf("Node Type: %s\n", getTypeAST(node));
-
     free(source);
     freeAST(node);
     destroyParser(parser);

@@ -7,7 +7,7 @@ OBJS_SRC=./objs
 INCLUDE_SRC=./include
 
 # Arquivos fonte e objetos - CORRIGIDO
-SRC_C_ARQS=$(SRC)/main.c $(SRC)/monny.c $(SRC)/scanner.c $(SRC)/parser.c
+SRC_C_ARQS=$(SRC)/main.c $(SRC)/monny.c $(SRC)/scanner.c $(SRC)/parser.c $(SRC)/codegen.c
 
 SRC_C_OUT=$(SRC_C_ARQS:$(SRC)/%.c=$(OBJS_SRC)/%.o)
 
