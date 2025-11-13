@@ -1,1 +1,2 @@
 display("Hello, World!");
+display("Hello, World!" + to_string(322) + '\n');
