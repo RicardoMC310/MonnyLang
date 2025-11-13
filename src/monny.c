@@ -1,4 +1,5 @@
 #include <monny.h>
+#include <scanner.h>
 
 struct MonnyState
 {
@@ -62,7 +63,33 @@ int monny_load_file(MonnyState *M, const char *filename)
         return -1;
     }
 
+    Scanner *scanner = createScanner(source, size);
+    if (scanTokens(scanner) < 0)
+    {
+        if (M->last_error) free(M->last_error);
+        M->last_error = getLastErrorScanner(scanner);
+        return 1;
+    }
+
+    Token *tokens = getTokens(scanner);
+    size_t tokensCount = getTokensCount(scanner);
+
+    for(size_t i = 0; i < tokensCount; i++)
+    {
+        printf("Token LEXEME: %s\n", (tokens + i)->lexeme);
+        if ((tokens + i)->type == TK_STRING)
+        {
+            printf("valor: %s\n", (tokens + i)->literal.string);
+        }
+        else if ((tokens + i)->type == TK_NUMBER)
+        {
+            printf("valor: %2f\n", (tokens + i)->literal.number);
+        }
+    }
+
     free(source);
+    destroyScanner(scanner);
+
     return 0;
 }
 
