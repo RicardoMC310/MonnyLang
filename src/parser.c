@@ -7,9 +7,18 @@
 struct ASTNode
 {
     NodeType type;
-    char *value;
+    const char *value;
     struct ASTNode *left;
     struct ASTNode *right;
+
+    union
+    {
+        struct
+        {
+            const char *varName;
+            struct ASTNode *value;
+        } setVar;
+    } data;
 };
 
 struct Parser
@@ -65,18 +74,34 @@ void consume(Parser *parser, TokenType type, const char *errorMsg)
     advanceToken(parser);
 }
 
-ASTNode *parserExpr(Parser *parser)
+ASTNode *createNode()
 {
     ASTNode *node = malloc(sizeof(ASTNode));
     if (node == NULL)
         return NULL;
 
+    node->type = ND_NULL;
+    node->left = NULL;
+    node->right = NULL;
+    node->value = NULL;
+
+    node->data.setVar.varName = NULL;
+    node->data.setVar.value = NULL;
+
+    return node;
+}
+
+ASTNode *parserExpr(Parser *parser)
+{
+    ASTNode *node = createNode();
+
     if (expected(parser, TK_NUMBER))
     {
         node->type = ND_NUMBER;
-        char buffer[64];
-        snprintf(buffer, sizeof(buffer), "%g", parser->tokens[parser->current].literal.number);
-        node->value = strdup(buffer);
+        // ALOCA no heap em vez de usar stack
+        char *buffer = malloc(64);
+        snprintf(buffer, 64, "%g", parser->tokens[parser->current].literal.number);
+        node->value = buffer;
         node->left = NULL;
         node->right = NULL;
         advanceToken(parser);
@@ -84,7 +109,7 @@ ASTNode *parserExpr(Parser *parser)
     else if (expected(parser, TK_STRING))
     {
         node->type = ND_STRING;
-        node->value = strdup(parser->tokens[parser->current].literal.string);
+        node->value = parser->tokens[parser->current].literal.string; // Scanner é dono
         node->left = NULL;
         node->right = NULL;
         advanceToken(parser);
@@ -92,7 +117,7 @@ ASTNode *parserExpr(Parser *parser)
     else if (expected(parser, TK_IDENTIFIER))
     {
         node->type = ND_IDENTIFIER;
-        node->value = strdup("NULL");
+        node->value = parser->tokens[parser->current].lexeme; // Scanner é dono
         node->left = NULL;
         node->right = NULL;
         advanceToken(parser);
@@ -109,9 +134,7 @@ ASTNode *parserExpr(Parser *parser)
 
 ASTNode *printSTMT(Parser *parser)
 {
-    ASTNode *node = malloc(sizeof(ASTNode));
-    if (node == NULL)
-        return NULL;
+    ASTNode *node = createNode();
 
     node->type = ND_PRINT;
     node->value = NULL;
@@ -129,20 +152,76 @@ ASTNode *printSTMT(Parser *parser)
     return node;
 }
 
+ASTNode *setSTMT(Parser *parser)
+{
+    consume(parser, TK_SET, "Expected 'SET'");
+    ASTNode *node = createNode();
+    node->type = ND_SET_VAR;
+
+    if (!expected(parser, TK_IDENTIFIER))
+    {
+        printf("Expected variable name after 'set'\n");
+        freeAST(node);
+        return NULL;
+    }
+
+    const char *varName = parser->tokens[parser->current].lexeme;  // Scanner é dono
+    advanceToken(parser);
+
+    if (!expected(parser, TK_EQUAL))
+    {
+        printf("Expected '=' after variable name\n");
+        freeAST(node);
+        return NULL;
+    }
+
+    advanceToken(parser);
+
+    ASTNode *value = parserExpr(parser);
+    if (value == NULL)
+    {
+        freeAST(node);
+        // NÃO free varName - Scanner é dono
+        return NULL;
+    }
+
+    if (!expected(parser, TK_SEMICOLON)) {
+        printf("Expected ';' after expression\n");
+        freeAST(node);
+        freeAST(value);
+        return NULL;
+    }
+    advanceToken(parser);
+
+    node->data.setVar.varName = varName;  // Scanner é dono
+    node->data.setVar.value = value;
+
+    return node;
+}
+
 void freeAST(ASTNode *node)
 {
-    if (node == NULL)
-        return;
-
-    if (node->value != NULL)
-    {
-        free(node->value);
-    }
+    if (node == NULL) return;
 
     freeAST(node->left);
     freeAST(node->right);
+
+    if (node->type == ND_SET_VAR)
+    {
+        if (node->data.setVar.value != NULL)
+        {
+            freeAST(node->data.setVar.value);
+        }
+    }
+
+    // Libera value APENAS se for ND_NUMBER (que alocamos com malloc)
+    if (node->type == ND_NUMBER && node->value != NULL)
+    {
+        free((void *)node->value);
+    }
+    // NÃO libere para ND_STRING ou ND_IDENTIFIER - Scanner é dono
+
     free(node);
-    node = NULL;
 }
 
 ASTNode *parse(Parser *parser)
@@ -150,6 +229,10 @@ ASTNode *parse(Parser *parser)
     if (expected(parser, TK_DISPLAY))
     {
         return printSTMT(parser);
+    }
+    else if (expected(parser, TK_SET))
+    {
+        return setSTMT(parser);
     }
     else
     {
@@ -168,7 +251,7 @@ NodeType getTypeAST(ASTNode *node)
     return node->type;
 }
 
-char *getValueAST(ASTNode *node)
+const char *getValueAST(ASTNode *node)
 {
     if (node == NULL)
     {
@@ -205,4 +288,24 @@ int isAtEndParser(Parser *parser)
 
     return parser->current >= parser->tokensCount ||
            parser->tokens[parser->current].type == TK_EOF;
+}
+
+ASTNode *getVarValue(ASTNode *node)
+{
+    if (node == NULL)
+    {
+        return NULL;
+    }
+
+    return node->data.setVar.value;
+}
+
+const char *getVarName(ASTNode *node)
+{
+    if (node == NULL)
+    {
+        return NULL;
+    }
+
+    return node->data.setVar.varName;
 }

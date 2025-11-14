@@ -1,3 +1,5 @@
+set a = 0;
+
 display("Hello, World!");
 
 display("Como vai você");

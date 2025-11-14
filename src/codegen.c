@@ -34,15 +34,6 @@ void destroyChunck(BytecodeChunck *chunck)
     if (chunck->code)
         free(chunck->code);
 
-    for (size_t i = 0; i < chunck->constants_count; i++)
-    {
-        if (chunck->constants[i].type == VAL_STRING &&
-            chunck->constants[i].value.string != NULL)
-        {
-            free((void *)chunck->constants[i].value.string);
-        }
-    }
-
     if (chunck->constants)
         free(chunck->constants);
 
@@ -88,8 +79,7 @@ void generateExpr(BytecodeChunck *chunck, ASTNode *node)
     }
     else if (getTypeAST(node) == ND_STRING)
     {
-        char *cpyStr = strdup(getValueAST(node));
-        TaggedValue constant = {VAL_STRING, {.string = cpyStr}};
+        TaggedValue constant = {VAL_STRING, {.string = getValueAST(node)}}; // ← SEM strdup
         int constant_index = addConstants(chunck, constant);
         writeByte(chunck, OP_CONSTANT);
         writeByte(chunck, constant_index);
@@ -125,6 +115,20 @@ void generatePrintSTMT(BytecodeChunck *chunck, ASTNode *node)
     writeByte(chunck, OP_POP);
 }
 
+void generateSetVarSTMT(BytecodeChunck *chunck, ASTNode *node)
+{
+    if (node == NULL)
+        return;
+    
+    generateExpr(chunck, getVarValue(node));
+    writeByte(chunck, OP_SET_VAR);
+
+    // USA a string diretamente, SEM strdup
+    TaggedValue varNameConstant = {VAL_STRING, {.string = getVarName(node)}};
+    int constantIndex = addConstants(chunck, varNameConstant);
+    writeByte(chunck, constantIndex);
+}
+
 BytecodeChunck *generateCode(ASTNode *node)
 {
     BytecodeChunck *chunck = createChunck();
@@ -137,6 +141,10 @@ BytecodeChunck *generateCode(ASTNode *node)
     if (getTypeAST(node) == ND_PRINT)
     {
         generatePrintSTMT(chunck, node);
+    }
+    else if (getTypeAST(node) == ND_SET_VAR)
+    {
+        generateSetVarSTMT(chunck, node);
     }
 
     writeByte(chunck, OP_RETURN);

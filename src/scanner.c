@@ -260,6 +260,12 @@ int scanToken(Scanner *scanner)
                 advance(scanner);
         }
         break;
+    
+    case '=':
+    {
+        addToken(scanner, TK_EQUAL, (Value){.ptr = NULL});
+        break;
+    }
 
     case ' ':
     case '\r':

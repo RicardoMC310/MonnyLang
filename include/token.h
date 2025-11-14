@@ -15,6 +15,7 @@ typedef enum
     TK_LEFT_PAREN,
     TK_RIGHT_PAREN,
     TK_SEMICOLON,
+    TK_EQUAL,
 
     TK_IDENTIFIER,
     TK_STRING,

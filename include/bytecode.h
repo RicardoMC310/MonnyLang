@@ -11,6 +11,8 @@
 typedef enum 
 {
     OP_CONSTANT,
+    OP_SET_VAR,
+    OP_GET_VAR,
     OP_PRINT_NUMBER,
     OP_PRINT_STRING,
     OP_PRINT_BOOL,
