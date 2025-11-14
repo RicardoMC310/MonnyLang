@@ -78,18 +78,26 @@ int monny_load_file(MonnyState *M, const char *filename)
     size_t tokensCount = getTokensCount(scanner);
 
     Parser *parser = createParser(tokens, tokensCount);
-    ASTNode *node = parse(parser);
-
-    BytecodeChunck *chunck = generateCode(node);
 
     VM *vm = createVM();
 
-    execute(vm, chunck);
+    while(!isAtEndParser(parser))    
+    {
+        ASTNode *node = parse(parser);
+
+        if (node != NULL)
+        {
+            BytecodeChunck *chunck = generateCode(node);
+
+            execute(vm, chunck);
+
+            destroyChunck(chunck);
+            freeAST(node);
+        }
+    }
 
     free(source);
-    freeAST(node);
     destroyVM(vm);
-    destroyChunck(chunck);
     destroyParser(parser);
     destroyScanner(scanner);
 

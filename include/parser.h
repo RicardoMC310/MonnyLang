@@ -10,8 +10,9 @@ Parser *createParser(Token *tokens, size_t tokensCount);
 void destroyParser(Parser *parser);
 
 ASTNode* parse(Parser* parser);
-void freeAST(ASTNode *node);
+int isAtEndParser(Parser *parser);
 
+void freeAST(ASTNode *node);
 char *getTypeAST(ASTNode *node);
 char *getValueAST(ASTNode *node);
 ASTNode *getLeftExpr(ASTNode *node);

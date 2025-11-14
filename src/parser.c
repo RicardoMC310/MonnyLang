@@ -197,3 +197,12 @@ ASTNode *getRightExpr(ASTNode *node)
 
     return node->right;
 }
+
+int isAtEndParser(Parser *parser)
+{
+    if (parser == NULL)
+        return 1;
+
+    return parser->current >= parser->tokensCount ||
+           parser->tokens[parser->current].type == TK_EOF;
+}

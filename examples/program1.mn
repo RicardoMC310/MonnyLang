@@ -1,2 +1,3 @@
-display(657.98);
-display(657.98);
+display("Hello, World!");
+
+display("Como vai você");
