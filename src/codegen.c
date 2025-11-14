@@ -78,7 +78,7 @@ void generateExpr(BytecodeChunck *chunck, ASTNode *node)
     if (node == NULL)
         return;
 
-    if (strcmp(getTypeAST(node), "number") == 0)
+    if (getTypeAST(node) == ND_NUMBER)
     {
         double number = atof(getValueAST(node));
         TaggedValue constant = {VAL_NUMBER, {.number = number}};
@@ -86,7 +86,7 @@ void generateExpr(BytecodeChunck *chunck, ASTNode *node)
         writeByte(chunck, OP_CONSTANT);
         writeByte(chunck, constant_index);
     }
-    else if (strcmp(getTypeAST(node), "string") == 0)
+    else if (getTypeAST(node) == ND_STRING)
     {
         char *cpyStr = strdup(getValueAST(node));
         TaggedValue constant = {VAL_STRING, {.string = cpyStr}};
@@ -94,7 +94,7 @@ void generateExpr(BytecodeChunck *chunck, ASTNode *node)
         writeByte(chunck, OP_CONSTANT);
         writeByte(chunck, constant_index);
     }
-    else if (strcmp(getTypeAST(node), "identifier") == 0)
+    else if (getTypeAST(node) == ND_IDENTIFIER)
     {
         printf("Aviso: Identificador ainda não foi implementado.");
     }
@@ -109,11 +109,11 @@ void generatePrintSTMT(BytecodeChunck *chunck, ASTNode *node)
 
     generateExpr(chunck, leftPrint);
 
-    if (strcmp(getTypeAST(leftPrint), "number") == 0)
+    if (getTypeAST(leftPrint) == ND_NUMBER)
     {
         writeByte(chunck, OP_PRINT_NUMBER);
     }
-    else if (strcmp(getTypeAST(leftPrint), "string") == 0)
+    else if (getTypeAST(leftPrint) == ND_STRING)
     {
         writeByte(chunck, OP_PRINT_STRING);
     }
@@ -134,7 +134,7 @@ BytecodeChunck *generateCode(ASTNode *node)
     if (node == NULL)
         writeByte(chunck, OP_RETURN);
 
-    if (strcmp(getTypeAST(node), "printSTMT") == 0)
+    if (getTypeAST(node) == ND_PRINT)
     {
         generatePrintSTMT(chunck, node);
     }

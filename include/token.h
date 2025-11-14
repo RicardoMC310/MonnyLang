@@ -10,6 +10,7 @@ typedef enum
     TK_TRUE,
     TK_FALSE,
     TK_NIL,
+    TK_SET,
 
     TK_LEFT_PAREN,
     TK_RIGHT_PAREN,

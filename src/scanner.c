@@ -16,6 +16,7 @@ static KeyWords keyWords[] = {
     {"true", TK_TRUE},
     {"false", TK_FALSE},
     {"nil", TK_NIL},
+    {"set", TK_SET},
     {NULL, TK_EOF}};
 
 struct Scanner

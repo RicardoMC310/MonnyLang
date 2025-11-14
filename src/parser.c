@@ -6,7 +6,7 @@
 
 struct ASTNode
 {
-    char *type;
+    NodeType type;
     char *value;
     struct ASTNode *left;
     struct ASTNode *right;
@@ -73,7 +73,7 @@ ASTNode *parserExpr(Parser *parser)
 
     if (expected(parser, TK_NUMBER))
     {
-        node->type = "number";
+        node->type = ND_NUMBER;
         char buffer[64];
         snprintf(buffer, sizeof(buffer), "%g", parser->tokens[parser->current].literal.number);
         node->value = strdup(buffer);
@@ -83,7 +83,7 @@ ASTNode *parserExpr(Parser *parser)
     }
     else if (expected(parser, TK_STRING))
     {
-        node->type = "string";
+        node->type = ND_STRING;
         node->value = strdup(parser->tokens[parser->current].literal.string);
         node->left = NULL;
         node->right = NULL;
@@ -91,7 +91,7 @@ ASTNode *parserExpr(Parser *parser)
     }
     else if (expected(parser, TK_IDENTIFIER))
     {
-        node->type = "identifier";
+        node->type = ND_IDENTIFIER;
         node->value = strdup("NULL");
         node->left = NULL;
         node->right = NULL;
@@ -113,7 +113,7 @@ ASTNode *printSTMT(Parser *parser)
     if (node == NULL)
         return NULL;
 
-    node->type = "printSTMT";
+    node->type = ND_PRINT;
     node->value = NULL;
 
     consume(parser, TK_DISPLAY, "expected 'display'");
@@ -158,11 +158,11 @@ ASTNode *parse(Parser *parser)
     }
 }
 
-char *getTypeAST(ASTNode *node)
+NodeType getTypeAST(ASTNode *node)
 {
     if (node == NULL)
     {
-        return "NULL";
+        return ND_NULL;
     }
 
     return node->type;
