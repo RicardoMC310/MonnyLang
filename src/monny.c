@@ -1,6 +1,8 @@
 #include <monny.h>
 #include <scanner.h>
 #include <parser.h>
+#include <bytecode.h>
+#include <vm.h>
 
 struct MonnyState
 {
@@ -78,8 +80,16 @@ int monny_load_file(MonnyState *M, const char *filename)
     Parser *parser = createParser(tokens, tokensCount);
     ASTNode *node = parse(parser);
 
+    BytecodeChunck *chunck = generateCode(node);
+
+    VM *vm = createVM();
+
+    execute(vm, chunck);
+
     free(source);
     freeAST(node);
+    destroyVM(vm);
+    destroyChunck(chunck);
     destroyParser(parser);
     destroyScanner(scanner);
 

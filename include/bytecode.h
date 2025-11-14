@@ -2,7 +2,9 @@
 #define BYTECODE_H
 
 #include <token.h>
+#include <parser.h>
 
+#include <stdlib.h>
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -24,15 +26,23 @@ typedef enum
     VAL_NUMBER,
     VAL_STRING,
     VAL_BOOLEAN,
-    VAL_OBJ
+    VAL_OBJ,
+    VAL_NIL
 } ValueType;
 
 typedef struct
 {
-    Value value;
     ValueType type;
+    Value value;
 } TaggedValue;
 
 typedef struct BytecodeChunck BytecodeChunck;
+
+BytecodeChunck *createChunck();
+void destroyChunck(BytecodeChunck *chunck);
+
+BytecodeChunck *generateCode(ASTNode *node);
+uint8_t *getCodeChunck(BytecodeChunck *chunck);
+TaggedValue *getConstantsChunck(BytecodeChunck *chunck);
 
 #endif // BYTECODE_H

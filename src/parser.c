@@ -167,3 +167,33 @@ char *getTypeAST(ASTNode *node)
 
     return node->type;
 }
+
+char *getValueAST(ASTNode *node)
+{
+    if (node == NULL)
+    {
+        return "NULL";
+    }
+
+    return node->value;
+}
+
+ASTNode *getLeftExpr(ASTNode *node)
+{
+    if (node == NULL)
+    {
+        return NULL;
+    }
+
+    return node->left;
+}
+
+ASTNode *getRightExpr(ASTNode *node)
+{
+    if (node == NULL)
+    {
+        return NULL;
+    }
+
+    return node->right;
+}

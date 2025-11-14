@@ -13,4 +13,7 @@ ASTNode* parse(Parser* parser);
 void freeAST(ASTNode *node);
 
 char *getTypeAST(ASTNode *node);
+char *getValueAST(ASTNode *node);
+ASTNode *getLeftExpr(ASTNode *node);
+ASTNode *getRightExpr(ASTNode *node);
 #endif // PARSER_H
