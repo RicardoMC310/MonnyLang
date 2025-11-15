@@ -3,12 +3,6 @@
 
 #include <stdio.h>
 
-typedef struct
-{
-    char *name;
-    TaggedValue value;
-} Variable;
-
 struct VM
 {
     BytecodeChunck *chunck;
@@ -17,10 +11,6 @@ struct VM
     TaggedValue *stack;
     size_t stackSize;
     size_t stackCapacity;
-
-    Variable *variables;
-    size_t varCount;
-    size_t varCapacity;
 };
 
 VM *createVM()
@@ -32,11 +22,8 @@ VM *createVM()
     vm->chunck = NULL;
     vm->ip = NULL;
     vm->stack = NULL;
-    vm->variables = NULL;
     vm->stackSize = 0;
     vm->stackCapacity = 0;
-    vm->varCapacity = 0;
-    vm->varCount = 0;
 
     return vm;
 }
@@ -52,70 +39,57 @@ void destroyVM(VM *vm)
         vm->stackSize = 0;
     }
 
-    if (vm->variables != NULL)
-    {
-        for (size_t i = 0; i < vm->varCount; i++)
-        {
-            // LIBERA o nome da variável (alocado com strdup)
-            if (vm->variables[i].name != NULL)
-            {
-                free(vm->variables[i].name);
-                vm->variables[i].name = NULL;
-            }
-
-            // Se o valor for uma string, também precisa liberar
-            if (vm->variables[i].value.type == VAL_STRING &&
-                vm->variables[i].value.value.string != NULL)
-            {
-                free((void *)vm->variables[i].value.value.string);
-                vm->variables[i].value.value.string = NULL;
-            }
-        }
-        free((void *)vm->variables);
-        vm->variables = NULL;
-        vm->varCapacity = 0;
-        vm->varCount = 0;
-    }
-
     free(vm);
     vm = NULL;
 }
 
 void setVariable(VM *vm, const char *name, TaggedValue value)
 {
-    for (size_t i = 0; i < vm->varCount; i++)
+    if (vm == NULL || name == NULL || vm->chunck == NULL)
     {
-        if (strcmp(vm->variables[i].name, name) == 0)
+        return;
+    }
+
+    Variable *variables = getVariablesChunck(vm->chunck);
+    size_t varCount = getVariablesCount(vm->chunck);
+
+    for (size_t i = 0; i < varCount; i++)
+    {
+        if (variables[i].name != NULL)
         {
-            vm->variables[i].value = value;
-            return;
+            if (strcmp(variables[i].name, name) == 0)
+            {
+                variables[i].value = value;
+                return;
+            }
         }
     }
 
-    if (vm->varCount >= vm->varCapacity)
-    {
-        vm->varCapacity = vm->varCapacity == 0 ? 8 : vm->varCapacity * 2;
-        vm->variables = realloc(vm->variables, sizeof(Variable) * vm->varCapacity);
-    }
-
-    vm->variables[vm->varCount].name = strdup(name);
-    vm->variables[vm->varCount].value = value;
-    vm->varCount++;
+    Variable newVar;
+    newVar.name = strdup(name);
+    newVar.value = value;
+    addVar(vm->chunck, newVar);
 }
 
-TaggedValue getVariable(VM *vm, char *name)
+TaggedValue getVariable(VM *vm, const char *name)
 {
-    for (size_t i = 0; i < vm->varCount; i++)
+    if (vm == NULL || name == NULL || vm->chunck == NULL)
     {
-        if (strcmp(vm->variables[i].name, name) == 0)
+        return (TaggedValue){VAL_NIL, {.number = 0}};
+    }
+
+    Variable *variables = getVariablesChunck(vm->chunck);
+    size_t varCount = getVariablesCount(vm->chunck);
+
+    for (size_t i = 0; i < varCount; i++)
+    {
+        if (variables[i].name != NULL && strcmp(variables[i].name, name) == 0)
         {
-            return vm->variables[i].value;
+            return variables[i].value;
         }
     }
 
-    // Variável não encontrada
-    printf("Error: Undefined variable '%s'\n", name);
-    return (TaggedValue){VAL_NUMBER, {.number = 0}};
+    return (TaggedValue){VAL_NIL, {.number = 0}};
 }
 
 void push(VM *vm, TaggedValue value)
@@ -157,33 +131,33 @@ InterpretResult execute(VM *vm, BytecodeChunck *chunck)
             break;
         }
 
-        case OP_PRINT_NUMBER:
+        case OP_PRINT:
         {
             TaggedValue value = pop(vm);
-            if (value.type == VAL_NUMBER)
+            switch (value.type)
             {
+            case VAL_NUMBER:
                 printf("%g\n", value.value.number);
-            }
-            else
-            {
-                printf("Erro: tipo passado não foi um numero.");
-                return ITP_RUNT_ERROR;
-            }
-            break;
-        }
-
-        case OP_PRINT_STRING:
-        {
-            TaggedValue value = pop(vm);
-            if (value.type == VAL_STRING)
-            {
+                break;
+            case VAL_STRING:
                 printf("%s\n", value.value.string);
-            }
-            else
+                break;
+            case VAL_BOOLEAN:
+                printf("%s\n", value.value.boolean ? "true" : "false");
+                break;
+            case VAL_NIL:
+                printf("nil\n");
+                break;
+            case VAL_IDENTIFIER:
             {
-                printf("Erro: tipo passado não foi um texto.");
+                printf("Print com identifier\n");
+                break;
+            }
+            default:
+                printf("Erro: tipo desconhecido.\n");
                 return ITP_RUNT_ERROR;
             }
+
             break;
         }
 
@@ -200,6 +174,23 @@ InterpretResult execute(VM *vm, BytecodeChunck *chunck)
             TaggedValue value = vm->stack[--vm->stackSize];
 
             setVariable(vm, TVvarName.value.string, value);
+
+            break;
+        }
+
+        case OP_GET_VAR:
+        {
+            uint8_t constantIndex = *vm->ip++;
+            TaggedValue TVvarName = getConstantsChunck(chunck)[constantIndex];
+
+            if (TVvarName.type != VAL_STRING)
+            {
+                continue;
+            }
+
+            TaggedValue value = getVariable(vm, TVvarName.value.string);
+
+            push(vm, value);
 
             break;
         }

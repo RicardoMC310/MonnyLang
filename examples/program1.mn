@@ -1,5 +1,15 @@
-set a = 0;
+set a = "Hello, World";
 
-display("Hello, World!");
+display(a);
 
-display("Como vai você");
+a = 123;
+
+display(a);
+
+a = "34";
+
+display(a);
+
+set b = a;
+
+display(b);

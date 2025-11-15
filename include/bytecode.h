@@ -13,9 +13,7 @@ typedef enum
     OP_CONSTANT,
     OP_SET_VAR,
     OP_GET_VAR,
-    OP_PRINT_NUMBER,
-    OP_PRINT_STRING,
-    OP_PRINT_BOOL,
+    OP_PRINT,
     OP_POP,
     OP_RETURN,
     OP_TRUE,
@@ -29,7 +27,8 @@ typedef enum
     VAL_STRING,
     VAL_BOOLEAN,
     VAL_OBJ,
-    VAL_NIL
+    VAL_NIL,
+    VAL_IDENTIFIER
 } ValueType;
 
 typedef struct
@@ -38,13 +37,23 @@ typedef struct
     Value value;
 } TaggedValue;
 
+typedef struct
+{
+    const char *name;
+    TaggedValue value;
+} Variable;
+
 typedef struct BytecodeChunck BytecodeChunck;
 
 BytecodeChunck *createChunck();
 void destroyChunck(BytecodeChunck *chunck);
 
-BytecodeChunck *generateCode(ASTNode *node);
+void generateCode(BytecodeChunck *chunck, ASTNode *node);
+void writeByte(BytecodeChunck *chunck, uint8_t byte);
 uint8_t *getCodeChunck(BytecodeChunck *chunck);
 TaggedValue *getConstantsChunck(BytecodeChunck *chunck);
+Variable *getVariablesChunck(BytecodeChunck *chunck);
+size_t getVariablesCount(BytecodeChunck *chunck);
+int addVar(BytecodeChunck *chunck, Variable var);
 
 #endif // BYTECODE_H

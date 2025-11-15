@@ -80,6 +80,7 @@ int monny_load_file(MonnyState *M, const char *filename)
     Parser *parser = createParser(tokens, tokensCount);
 
     VM *vm = createVM();
+    BytecodeChunck *chunck = createChunck();
 
     while(!isAtEndParser(parser))    
     {
@@ -87,16 +88,16 @@ int monny_load_file(MonnyState *M, const char *filename)
 
         if (node != NULL)
         {
-            BytecodeChunck *chunck = generateCode(node);
-
-            execute(vm, chunck);
-
-            destroyChunck(chunck);
+            generateCode(chunck, node);
             freeAST(node);
         }
     }
 
+    writeByte(chunck, OP_RETURN);
+    execute(vm, chunck);
+    
     free(source);
+    destroyChunck(chunck);
     destroyVM(vm);
     destroyParser(parser);
     destroyScanner(scanner);

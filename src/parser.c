@@ -165,7 +165,7 @@ ASTNode *setSTMT(Parser *parser)
         return NULL;
     }
 
-    const char *varName = parser->tokens[parser->current].lexeme;  // Scanner é dono
+    const char *varName = parser->tokens[parser->current].lexeme; // Scanner é dono
     advanceToken(parser);
 
     if (!expected(parser, TK_EQUAL))
@@ -185,7 +185,8 @@ ASTNode *setSTMT(Parser *parser)
         return NULL;
     }
 
-    if (!expected(parser, TK_SEMICOLON)) {
+    if (!expected(parser, TK_SEMICOLON))
+    {
         printf("Expected ';' after expression\n");
         freeAST(node);
         freeAST(value);
@@ -193,7 +194,7 @@ ASTNode *setSTMT(Parser *parser)
     }
     advanceToken(parser);
 
-    node->data.setVar.varName = varName;  // Scanner é dono
+    node->data.setVar.varName = varName;
     node->data.setVar.value = value;
 
     return node;
@@ -201,7 +202,8 @@ ASTNode *setSTMT(Parser *parser)
 
 void freeAST(ASTNode *node)
 {
-    if (node == NULL) return;
+    if (node == NULL)
+        return;
 
     freeAST(node->left);
     freeAST(node->right);
@@ -214,14 +216,54 @@ void freeAST(ASTNode *node)
         }
     }
 
-    // Libera value APENAS se for ND_NUMBER (que alocamos com malloc)
     if (node->type == ND_NUMBER && node->value != NULL)
     {
         free((void *)node->value);
     }
-    // NÃO libere para ND_STRING ou ND_IDENTIFIER - Scanner é dono
 
     free(node);
+}
+
+ASTNode *identifierSTMT(Parser *parser)
+{
+    ASTNode *node = createNode();
+    if (node == NULL)
+        return NULL;
+    node->type = ND_IDENTIFIER;
+
+    Token token = advanceToken(parser);
+
+    node->value = token.lexeme;
+
+    return node;
+}
+
+ASTNode *assignmentSTMT(Parser *parser, const char *varName)
+{
+    consume(parser, TK_EQUAL, "Expected '=' after variable name.");
+    ASTNode *node = createNode();
+
+    node->type = ND_SET_VAR;
+
+    ASTNode *value = parserExpr(parser);
+    if (value == NULL)
+    {
+        freeAST(node);
+        return NULL;
+    }
+
+    if (!expected(parser, TK_SEMICOLON)) {
+        printf("Expected ';' after expression\n");
+        freeAST(node);
+        freeAST(value);
+        return NULL;
+    }
+    advanceToken(parser);
+
+    node->data.setVar.varName = varName;
+    node->data.setVar.value = value;
+
+    return node;
 }
 
 ASTNode *parse(Parser *parser)
@@ -233,6 +275,20 @@ ASTNode *parse(Parser *parser)
     else if (expected(parser, TK_SET))
     {
         return setSTMT(parser);
+    }
+    else if (expected(parser, TK_IDENTIFIER))
+    {
+        Token identifier = parser->tokens[parser->current];
+        advanceToken(parser);
+
+        if (expected(parser, TK_EQUAL))
+        {
+            return assignmentSTMT(parser, identifier.lexeme);
+        }
+        else
+        {
+            return setSTMT(parser);
+        }
     }
     else
     {

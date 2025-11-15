@@ -11,6 +11,10 @@ struct BytecodeChunck
     TaggedValue *constants;
     size_t constants_capacity;
     size_t constants_count;
+
+    Variable *variables;
+    size_t varCapacity;
+    size_t varCount;
 };
 
 BytecodeChunck *createChunck()
@@ -25,6 +29,9 @@ BytecodeChunck *createChunck()
     chunck->constants = NULL;
     chunck->constants_capacity = 0;
     chunck->constants_count = 0;
+    chunck->variables = NULL;
+    chunck->varCapacity = 0;
+    chunck->varCount = 0;
 
     return chunck;
 }
@@ -33,6 +40,19 @@ void destroyChunck(BytecodeChunck *chunck)
 {
     if (chunck->code)
         free(chunck->code);
+
+    if (chunck->variables)
+    {
+        for (size_t i = 0; i < chunck->varCount; i++)
+        {
+            if (chunck->variables[i].name != NULL)
+            {
+                free((void*)chunck->variables[i].name);
+            }
+        }
+
+        free(chunck->variables);
+    }
 
     if (chunck->constants)
         free(chunck->constants);
@@ -64,6 +84,18 @@ int addConstants(BytecodeChunck *chunck, TaggedValue value)
     return chunck->constants_count++;
 }
 
+int addVar(BytecodeChunck *chunck, Variable var)
+{
+    if (chunck->varCount >= chunck->varCapacity)
+    {
+        chunck->varCapacity = chunck->varCapacity == 0 ? 8 : chunck->varCapacity * 2;
+        chunck->variables = realloc(chunck->variables, sizeof(Variable) * chunck->varCapacity);
+    }
+
+    chunck->variables[chunck->varCount] = var;
+    return chunck->varCount++;
+}
+
 void generateExpr(BytecodeChunck *chunck, ASTNode *node)
 {
     if (node == NULL)
@@ -79,14 +111,18 @@ void generateExpr(BytecodeChunck *chunck, ASTNode *node)
     }
     else if (getTypeAST(node) == ND_STRING)
     {
-        TaggedValue constant = {VAL_STRING, {.string = getValueAST(node)}}; // ← SEM strdup
+        TaggedValue constant = {VAL_STRING, {.string = getValueAST(node)}};
         int constant_index = addConstants(chunck, constant);
         writeByte(chunck, OP_CONSTANT);
         writeByte(chunck, constant_index);
     }
     else if (getTypeAST(node) == ND_IDENTIFIER)
     {
-        printf("Aviso: Identificador ainda não foi implementado.");
+        writeByte(chunck, OP_GET_VAR);
+
+        TaggedValue varName = {VAL_STRING, {.string = getValueAST(node)}};
+        int constantIndex = addConstants(chunck, varName);
+        writeByte(chunck, constantIndex);
     }
 }
 
@@ -99,18 +135,7 @@ void generatePrintSTMT(BytecodeChunck *chunck, ASTNode *node)
 
     generateExpr(chunck, leftPrint);
 
-    if (getTypeAST(leftPrint) == ND_NUMBER)
-    {
-        writeByte(chunck, OP_PRINT_NUMBER);
-    }
-    else if (getTypeAST(leftPrint) == ND_STRING)
-    {
-        writeByte(chunck, OP_PRINT_STRING);
-    }
-    else
-    {
-        writeByte(chunck, OP_PRINT_NUMBER);
-    }
+    writeByte(chunck, OP_PRINT);
 
     writeByte(chunck, OP_POP);
 }
@@ -119,7 +144,7 @@ void generateSetVarSTMT(BytecodeChunck *chunck, ASTNode *node)
 {
     if (node == NULL)
         return;
-    
+
     generateExpr(chunck, getVarValue(node));
     writeByte(chunck, OP_SET_VAR);
 
@@ -129,11 +154,10 @@ void generateSetVarSTMT(BytecodeChunck *chunck, ASTNode *node)
     writeByte(chunck, constantIndex);
 }
 
-BytecodeChunck *generateCode(ASTNode *node)
+void generateCode(BytecodeChunck *chunck, ASTNode *node)
 {
-    BytecodeChunck *chunck = createChunck();
     if (chunck == NULL)
-        return NULL;
+        return;
 
     if (node == NULL)
         writeByte(chunck, OP_RETURN);
@@ -146,10 +170,10 @@ BytecodeChunck *generateCode(ASTNode *node)
     {
         generateSetVarSTMT(chunck, node);
     }
-
-    writeByte(chunck, OP_RETURN);
-
-    return chunck;
+    else
+    {
+        printf("DEBUG: generateCode - Tipo de node desconhecido: %d\n", getTypeAST(node));
+    }
 }
 
 uint8_t *getCodeChunck(BytecodeChunck *chunck)
@@ -166,4 +190,20 @@ TaggedValue *getConstantsChunck(BytecodeChunck *chunck)
         return NULL;
 
     return chunck->constants;
+}
+
+Variable *getVariablesChunck(BytecodeChunck *chunck)
+{
+    if (chunck == NULL)
+        return NULL;
+
+    return chunck->variables;
+}
+
+size_t getVariablesCount(BytecodeChunck *chunck)
+{
+    if (chunck == NULL)
+        return 0;
+
+    return chunck->varCount;
 }
