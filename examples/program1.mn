@@ -13,3 +13,7 @@ display(a);
 set b = a;
 
 display(b);
+
+b = 89.8779;
+
+display(b);
