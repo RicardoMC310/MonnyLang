@@ -1,0 +1,7 @@
+services:
+  rust:
+    build: .
+    container_name: rust_dev
+    volumes:
+      - .:/app
+    tty: true
