@@ -124,11 +124,12 @@ extern "C"
    Gerador de funções
    =========================================================== */
 #define MONNY_DEFINE_COLOR_FUNC(name, code)             \
-    static inline void monny_output_##name(FILE *s)    \
+    static inline FILE *monny_output_##name(FILE *s)    \
     {                                                   \
         monny_enable_ansi_if_needed();                  \
         if (monny_ansi_enabled == 1 && monny_is_tty(s)) \
             fputs(code, s);                             \
+        return s;                                       \
     }
 
     /* Estilos */
