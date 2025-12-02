@@ -7,20 +7,9 @@
 #include <sys/types.h>
 #endif
 
-typedef struct Process
-{
-#ifdef _WIN32
-    HANDLE hPipeIn;
-    HANDLE hPipeOut;
-    HANDLE hProcess;
-    HANDLE hThread;
-#else
-    int pty_master;
-    pid_t pid;
-#endif
-} Process;
+typedef struct Process Process;
 
-Process monny_process_spawn(char *argv[]);
+Process *monny_process_spawn(char *argv[]);
 void monny_process_write(Process *process, const char *text);
 char *monny_process_read(Process *process);
 

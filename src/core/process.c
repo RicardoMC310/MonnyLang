@@ -10,7 +10,13 @@
 #include <sys/wait.h>
 #include <stdio.h>
 
-Process monny_process_spawn(char *argv[])
+struct Process
+{
+    int pty_master;
+    pid_t pid;
+};
+
+Process *monny_process_spawn(char *argv[])
 {
 
     int master_fd;
@@ -34,9 +40,9 @@ Process monny_process_spawn(char *argv[])
     t.c_lflag &= ~ECHO;
     tcsetattr(master_fd, TCSANOW, &t);
 
-    Process p = {
-        .pty_master = master_fd,
-        .pid = pid};
+    Process *p = (Process *)malloc(sizeof(Process));
+    p->pty_master = master_fd,
+    p->pid = pid;
 
     return p;
 }
@@ -72,13 +78,21 @@ void monny_process_end(Process *process)
 
 #elifdef _WIN32
 
+struct Process
+{
+    HANDLE hPipeIn;
+    HANDLE hPipeOut;
+    HANDLE hProcess;
+    HANDLE hThread;
+};
+
 #include "monny/core/process.h"
 #include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-Process monny_process_spawn(char *argv[])
+Process *monny_process_spawn(char *argv[])
 {
     SECURITY_ATTRIBUTES sa = {sizeof(SECURITY_ATTRIBUTES), NULL, TRUE};
 
@@ -131,11 +145,12 @@ Process monny_process_spawn(char *argv[])
     CloseHandle(child_stdin_read);
     CloseHandle(child_stdout_write);
 
-    Process p = {
-        .in_write = child_stdin_write,
-        .out_read = child_stdout_read,
-        .process_handle = pi.hProcess,
-        .thread_handle = pi.hThread};
+    Process *p = (Process *)malloc(sizeof(Process));
+    
+    p->in_write = child_stdin_write;
+    p->out_read = child_stdout_read;
+    p->process_handle = pi.hProcess;
+    p->thread_handle = pi.hThread;
 
     return p;
 }

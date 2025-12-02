@@ -36,14 +36,14 @@ void *writer(void *data)
 int main()
 {
     char *args[] = {"python3", "-u", "main.py", NULL};
-    Process p = monny_process_spawn(args);
+    Process *p = monny_process_spawn(args);
 
     pthread_t t1, t2;
-    pthread_create(&t1, NULL, reader, &p);
-    pthread_create(&t2, NULL, writer, &p);
+    pthread_create(&t1, NULL, reader, p);
+    pthread_create(&t2, NULL, writer, p);
 
     pthread_join(t2, NULL);
     pthread_join(t1, NULL);
 
-    monny_process_end(&p);
+    monny_process_end(p);
 }
