@@ -10,31 +10,31 @@ typedef union
     double number;
     char *string;
     void *ptr;
-} Value;
+} monny_value_t;
 
 typedef enum
 {
-    TY_STRING,
-    TY_NIL,
-    TY_NUMBER
-} ValueType;
+    MONNY_TY_STRING,
+    MONNY_TY_NIL,
+    MONNY_TY_NUMBER
+} monny_valuetype_t;
 
 typedef struct
 {
-    Value as;
-    ValueType type;
-} TaggedValue;
+    monny_value_t as;
+    monny_valuetype_t type;
+} monny_taggedvalue_t;
 
-#define IS_NUMBER(value) ((value).type == TY_NUMBER)
-#define IS_STRING(value) ((value).type == TY_STRING)
-#define IS_NIL(value) ((value).type == TY_NIL)
+#define MONNY_IS_NUMBER(value) ((value).type == MONNY_TY_NUMBER)
+#define MONNY_IS_STRING(value) ((value).type == MONNY_TY_STRING)
+#define MONNY_IS_NIL(value) ((value).type == MONNY_TY_NIL)
 
-#define AS_NUMBER(value) ((value).as.number)
-#define AS_STRING(value) ((value).as.string)
-#define AS_NIL(value) ((value).as.ptr)
+#define MONNY_AS_NUMBER(value) ((value).as.number)
+#define MONNY_AS_STRING(value) ((value).as.string)
+#define MONNY_AS_NIL(value) ((value).as.ptr)
 
-#define MAKE_NUMBER(value) ((TaggedValue){.as.number = (value), .type = TY_NUMBER})
-#define MAKE_STRING(str) ((TaggedValue){.as.string = (str), .type = TY_STRING})
-#define MAKE_NIL() ((TaggedValue){.as.ptr = NULL, .type = TY_NIL})
+#define MONNY_MAKE_NUMBER(value) ((monny_taggedvalue_t){.as.number = (value), .type = MONNY_TY_NUMBER})
+#define MONNY_MAKE_STRING(str) ((monny_taggedvalue_t){.as.string = (str), .type = MONNY_TY_STRING})
+#define MONNY_MAKE_NIL() ((monny_taggedvalue_t){.as.ptr = NULL, .type = MONNY_TY_NIL})
 
 #endif // VALUES_H
