@@ -11,6 +11,25 @@ struct monny_state_t
     int memory_capacity, memory_quantity;
 };
 
+void monny_memory_resize(monny_state_t *state)
+{
+    size_t old_capacity = state->memory_capacity;
+    size_t new_capacity = state->memory_capacity == 0 ? 5 : state->memory_capacity * 2;
+
+    monny_variable_t *new_ptr = (monny_variable_t *)realloc(state->memory, new_capacity * sizeof(monny_variable_t));
+    if (!new_ptr)
+        return;
+
+    state->memory = new_ptr;
+
+    memset(
+        state->memory + old_capacity,
+        0,
+        (new_capacity - old_capacity) * sizeof(monny_variable_t));
+
+    state->memory_capacity = new_capacity;
+}
+
 monny_state_t *monny_create_state()
 {
     monny_state_t *state = (monny_state_t *)calloc(1, sizeof(monny_state_t));
