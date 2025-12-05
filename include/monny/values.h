@@ -25,6 +25,12 @@ typedef struct
     monny_valuetype_t type;
 } monny_taggedvalue_t;
 
+typedef struct 
+{
+    monny_taggedvalue_t tagged_value;
+    char *name;
+} monny_variable_t;
+
 #define MONNY_IS_NUMBER(value) ((value).type == MONNY_TY_NUMBER)
 #define MONNY_IS_STRING(value) ((value).type == MONNY_TY_STRING)
 #define MONNY_IS_NIL(value) ((value).type == MONNY_TY_NIL)
