@@ -1,0 +1,17 @@
+#ifndef TOKENS_H
+#define TOKENS_H
+
+enum {
+    MONNY_TK_EOF,
+    MONNY_TK_NUMBER,
+    MONNY_TK_STRING,
+    MONNY_TK_NIL,
+
+    MONNY_TK_DISPLAY,
+
+    MONNY_TK_LEFTPAREN,
+    MONNY_TK_RIGHTPAREN,
+    MONNY_TK_SEMICOLON
+};
+
+#endif // TOKENS_H

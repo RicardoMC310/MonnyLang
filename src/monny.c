@@ -54,6 +54,8 @@ monny_state_t *monny_create_state()
         return NULL;
     }
 
+    state->buffer_chars = NULL;
+
     return state;
 }
 
@@ -124,6 +126,9 @@ int monny_load_file(monny_state_t *state, char *path)
 {
     if (state == NULL)
         return MONNY_ERROR;
+
+    if (state->buffer_chars)
+        free(state->buffer_chars);
 
     if (monny_save_buffer_file(state, path) == MONNY_ERROR)
         return MONNY_ERROR;
