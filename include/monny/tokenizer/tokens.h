@@ -1,7 +1,9 @@
 #ifndef TOKENS_H
 #define TOKENS_H
 
-enum {
+#include <stdint.h>
+
+enum : uint32_t {
     MONNY_TK_EOF,
     MONNY_TK_NUMBER,
     MONNY_TK_STRING,

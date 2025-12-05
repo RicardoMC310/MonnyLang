@@ -1,9 +1,9 @@
 #include "monny/monny.h"
 #include "monny/values.h"
+#include "monny/tokenizer/scanner.h"
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
 
 struct monny_state_t
 {
@@ -21,7 +21,7 @@ void monny_memory_resize(monny_state_t *state)
     monny_variable_t *new_ptr = (monny_variable_t *)realloc(state->memory, new_capacity * sizeof(monny_variable_t));
     if (!new_ptr)
     {
-        perror("monny memory");
+        perror("resize monny memory");
         return;
     }
 
@@ -133,7 +133,11 @@ int monny_load_file(monny_state_t *state, char *path)
     if (monny_save_buffer_file(state, path) == MONNY_ERROR)
         return MONNY_ERROR;
 
-    
+    monny_scanner_t *scanner = monny_create_scanner();
+
+
+
+    monny_free_scanner(scanner);
 
     return MONNY_OK;
 }
