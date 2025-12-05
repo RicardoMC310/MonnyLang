@@ -13,7 +13,11 @@ int main(int argc, char **argv)
         return MONNY_ERROR;
     }
 
-    monny_load_file(state, argv[1]);
+    if (monny_load_file(state, argv[1]) == MONNY_ERROR)
+    {
+        monny_free_state(state);
+        return MONNY_ERROR;
+    }
 
     monny_free_state(state);
     return MONNY_OK;

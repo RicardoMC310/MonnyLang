@@ -87,11 +87,8 @@ void monny_free_state(monny_state_t *state)
     state = NULL;
 }
 
-int monny_load_file(monny_state_t *state, char *path)
+int monny_save_buffer_file(monny_state_t *state, char *path)
 {
-    if (state == NULL)
-        return MONNY_ERROR;
-
     FILE *file = fopen(path, "rb");
     if (!file)
     {
@@ -119,6 +116,19 @@ int monny_load_file(monny_state_t *state, char *path)
         perror("read file");
         return MONNY_ERROR;
     }
+
+    return MONNY_OK;
+}
+
+int monny_load_file(monny_state_t *state, char *path)
+{
+    if (state == NULL)
+        return MONNY_ERROR;
+
+    if (monny_save_buffer_file(state, path) == MONNY_ERROR)
+        return MONNY_ERROR;
+
+    
 
     return MONNY_OK;
 }
