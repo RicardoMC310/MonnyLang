@@ -9,6 +9,8 @@ struct monny_state_t
 {
     monny_variable_t *memory;
     int memory_capacity, memory_quantity;
+
+    char *buffer_chars;
 };
 
 void monny_memory_resize(monny_state_t *state)
@@ -18,7 +20,10 @@ void monny_memory_resize(monny_state_t *state)
 
     monny_variable_t *new_ptr = (monny_variable_t *)realloc(state->memory, new_capacity * sizeof(monny_variable_t));
     if (!new_ptr)
+    {
+        perror("monny memory");
         return;
+    }
 
     state->memory = new_ptr;
 
@@ -34,13 +39,17 @@ monny_state_t *monny_create_state()
 {
     monny_state_t *state = (monny_state_t *)calloc(1, sizeof(monny_state_t));
     if (!state)
+    {
+        perror("monny state");
         return NULL;
+    }
 
     state->memory_capacity = 5;
     state->memory_quantity = 0;
     state->memory = (monny_variable_t *)calloc(state->memory_capacity, sizeof(monny_variable_t));
     if (!state->memory)
     {
+        perror("monny memory");
         free(state);
         return NULL;
     }
@@ -71,6 +80,45 @@ void monny_free_state(monny_state_t *state)
         free(state->memory);
     }
 
+    if (state->buffer_chars)
+        free(state->buffer_chars);
+
     free(state);
     state = NULL;
+}
+
+int monny_load_file(monny_state_t *state, char *path)
+{
+    if (state == NULL)
+        return MONNY_ERROR;
+
+    FILE *file = fopen(path, "rb");
+    if (!file)
+    {
+        perror("file");
+        return MONNY_ERROR;
+    }
+
+    fseek(file, 0, SEEK_END);
+    size_t file_size = ftell(file);
+    fseek(file, 0, SEEK_SET);
+
+    state->buffer_chars = (char *)calloc(file_size, sizeof(char));
+    if (!state->buffer_chars)
+    {
+        perror("monny buffer_chars");
+        fclose(file);
+        return MONNY_ERROR;
+    }
+
+    size_t bytes_readed = fread(state->buffer_chars, sizeof(char), file_size, file);
+    fclose(file);
+
+    if (bytes_readed != file_size)
+    {
+        perror("read file");
+        return MONNY_ERROR;
+    }
+
+    return MONNY_OK;
 }
