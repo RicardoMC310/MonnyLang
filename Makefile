@@ -14,20 +14,16 @@ RESET=\033[0m
 #        Config Geral
 # ============================
 
-CC=gcc
 CXX=g++
 SRC=./src
 OBJS=./objs
 BUILD=./build
 INCLUDE_SRC=./include
 
-# Detectar fontes
-SRC_C=$(shell find $(SRC) -type f -name '*.c')
+# Detectar fontes C++
 SRC_CPP=$(shell find $(SRC) -type f -name '*.cpp')
-
-OBJ_C=$(SRC_C:$(SRC)/%.c=$(OBJS)/%.o)
 OBJ_CPP=$(SRC_CPP:$(SRC)/%.cpp=$(OBJS)/%.o)
-OBJS_ALL=$(OBJ_C) $(OBJ_CPP)
+OBJS_ALL=$(OBJ_CPP)
 
 OUT=$(BUILD)/monny
 
@@ -39,13 +35,11 @@ MODE ?= debug
 
 ifeq ($(MODE),debug)
     MODE_COLOR=$(YELLOW)
-    CFLAGS=-Wall -Wextra -g -O0 -I$(INCLUDE_SRC) #-DMONNY_DEBUG_TOKENS
-    CPPFLAGS=$(CFLAGS)
+    CXXFLAGS=-Wall -Wextra -g -O0 -I$(INCLUDE_SRC) #-DMONNY_DEBUG_TOKENS
     MODE_NAME="DEBUG"
 else ifeq ($(MODE),release)
     MODE_COLOR=$(GREEN)
-    CFLAGS=-Wall -Wextra -O3 -DNDEBUG -I$(INCLUDE_SRC)
-    CPPFLAGS=$(CFLAGS)
+    CXXFLAGS=-Wall -Wextra -O3 -DNDEBUG -I$(INCLUDE_SRC)
     MODE_NAME="RELEASE"
 else
     $(error MODE inválido! Use 'debug' ou 'release')
@@ -69,19 +63,13 @@ build_target: $(OUT)
 # Linkagem
 $(OUT): $(OBJS_ALL) | $(BUILD)
 	@echo -e "$(MODE_COLOR)[LINK $(MODE_NAME)]$(RESET) $@"
-	@$(CC) $(OBJS_ALL) -o $@
-
-# Compilar .c
-$(OBJS)/%.o: $(SRC)/%.c
-	@mkdir -p $(dir $@)
-	@echo -e "$(MODE_COLOR)[CC $(MODE_NAME)]$(RESET)  $<"
-	@$(CC) -c $< -o $@ $(CFLAGS) -MMD -MP
+	@$(CXX) $(OBJS_ALL) -o $@
 
 # Compilar .cpp
 $(OBJS)/%.o: $(SRC)/%.cpp
 	@mkdir -p $(dir $@)
 	@echo -e "$(MODE_COLOR)[CXX $(MODE_NAME)]$(RESET) $<"
-	@$(CXX) -c $< -o $@ $(CPPFLAGS) -MMD -MP
+	@$(CXX) -c $< -o $@ $(CXXFLAGS) -MMD -MP
 
 # Incluir arquivos .d
 -include $(OBJS_ALL:.o=.d)
