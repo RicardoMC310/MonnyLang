@@ -4,49 +4,29 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 struct monny_state_t
 {
     monny_variable_t *memory;
-    int memory_capacity, memory_quantity;
+    size_t memory_capacity;
+    size_t memory_quantity;
 
     char *buffer_chars;
 };
 
-void monny_memory_resize(monny_state_t *state)
-{
-    size_t old_capacity = state->memory_capacity;
-    size_t new_capacity = state->memory_capacity == 0 ? 5 : state->memory_capacity * 2;
-
-    monny_variable_t *new_ptr = (monny_variable_t *)realloc(state->memory, new_capacity * sizeof(monny_variable_t));
-    if (!new_ptr)
-    {
-        perror("resize monny memory");
-        return;
-    }
-
-    state->memory = new_ptr;
-
-    memset(
-        state->memory + old_capacity,
-        0,
-        (new_capacity - old_capacity) * sizeof(monny_variable_t));
-
-    state->memory_capacity = new_capacity;
-}
-
 monny_state_t *monny_create_state()
 {
-    monny_state_t *state = (monny_state_t *)calloc(1, sizeof(monny_state_t));
+    monny_state_t *state = calloc(1, sizeof(monny_state_t));
     if (!state)
     {
-        perror("monny state");
+        perror("create monny state");
         return NULL;
     }
 
-    state->memory_capacity = 5;
+    state->memory_capacity = 8;
     state->memory_quantity = 0;
-    state->memory = (monny_variable_t *)calloc(state->memory_capacity, sizeof(monny_variable_t));
+    state->memory = calloc(state->memory_capacity, sizeof(monny_variable_t));
     if (!state->memory)
     {
         perror("monny memory");
@@ -55,7 +35,6 @@ monny_state_t *monny_create_state()
     }
 
     state->buffer_chars = NULL;
-
     return state;
 }
 
@@ -66,19 +45,21 @@ void monny_free_state(monny_state_t *state)
 
     if (state->memory)
     {
-        int i;
-        for (i = 0; i < state->memory_quantity; i++)
+        for (size_t i = 0; i < state->memory_quantity; i++)
         {
-            monny_variable_t *variable = &state->memory[i];
-            if (variable->name)
-                free(variable->name);
+            monny_variable_t *var = &state->memory[i];
 
-            if (MONNY_IS_NIL(variable->tagged_value) && MONNY_AS_NIL(variable->tagged_value))
+            if (var->name)
+                free(var->name);
+
+            if (MONNY_IS_STRING(var->tagged_value))
             {
-                free(variable->tagged_value.as.ptr);
+                // Agora não precisamos free da string do token
+                // Só liberamos strings realmente alocadas para variáveis
+                if (var->tagged_value.as.string)
+                    free(var->tagged_value.as.string);
             }
         }
-
         free(state->memory);
     }
 
@@ -86,15 +67,14 @@ void monny_free_state(monny_state_t *state)
         free(state->buffer_chars);
 
     free(state);
-    state = NULL;
 }
 
-int monny_save_buffer_file(monny_state_t *state, char *path)
+static int monny_save_buffer_file(monny_state_t *state, const char *path)
 {
     FILE *file = fopen(path, "rb");
     if (!file)
     {
-        perror("file");
+        perror("file open");
         return MONNY_ERROR;
     }
 
@@ -102,42 +82,50 @@ int monny_save_buffer_file(monny_state_t *state, char *path)
     size_t file_size = ftell(file);
     fseek(file, 0, SEEK_SET);
 
-    state->buffer_chars = (char *)calloc(file_size, sizeof(char));
+    state->buffer_chars = calloc(file_size + 1, sizeof(char));
     if (!state->buffer_chars)
     {
-        perror("monny buffer_chars");
+        perror("buffer alloc");
         fclose(file);
         return MONNY_ERROR;
     }
 
-    size_t bytes_readed = fread(state->buffer_chars, sizeof(char), file_size, file);
+    size_t readed = fread(state->buffer_chars, 1, file_size, file);
     fclose(file);
 
-    if (bytes_readed != file_size)
+    if (readed != file_size)
     {
-        perror("read file");
+        perror("file read");
+        free(state->buffer_chars);
+        state->buffer_chars = NULL;
         return MONNY_ERROR;
     }
 
+    state->buffer_chars[file_size] = '\0';
     return MONNY_OK;
 }
 
 int monny_load_file(monny_state_t *state, char *path)
 {
-    if (state == NULL)
+    if (!state)
         return MONNY_ERROR;
 
     if (state->buffer_chars)
+    {
         free(state->buffer_chars);
+        state->buffer_chars = NULL;
+    }
 
-    if (monny_save_buffer_file(state, path) == MONNY_ERROR)
+    if (monny_save_buffer_file(state, path) != MONNY_OK)
         return MONNY_ERROR;
 
     monny_scanner_t *scanner = monny_create_scanner();
+    if (!scanner)
+        return MONNY_ERROR;
 
-
+    monny_tokens_t *tokens = monny_scan_tokens(scanner, state->buffer_chars, (int)strlen(state->buffer_chars));
+    (void)tokens;
 
     monny_free_scanner(scanner);
-
     return MONNY_OK;
 }

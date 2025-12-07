@@ -1,1 +1,3 @@
-display("Teste");
+display("Hello, World!");
+display(12.89);
+display(12);

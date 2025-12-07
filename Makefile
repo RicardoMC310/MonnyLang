@@ -39,7 +39,7 @@ MODE ?= debug
 
 ifeq ($(MODE),debug)
     MODE_COLOR=$(YELLOW)
-    CFLAGS=-Wall -Wextra -g -O0 -I$(INCLUDE_SRC)
+    CFLAGS=-Wall -Wextra -g -O0 -I$(INCLUDE_SRC) #-DMONNY_DEBUG_TOKENS
     CPPFLAGS=$(CFLAGS)
     MODE_NAME="DEBUG"
 else ifeq ($(MODE),release)
