@@ -44,12 +44,12 @@ A arquitetura foi pensada para ser clara, extensível e adequada a projetos de s
 ## 🚀 Exemplo de código
 
 ```monny
-var x = 10;
-var y = 20;
+set x = 10;
+set y = 20;
 
 func soma(a, b) {
     return a + b;
 }
 
-print(soma(x, y));
+display(soma(x, y));
 
