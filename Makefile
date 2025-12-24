@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -I./include -MMD -MP -O0 -Waddress
+CFLAGS = -Wall -Wextra -I./include -MMD -MP -O0 -Waddress -g -fsanitize=address -std=c23
 LDFLAGS = -fsanitize=address
 
 SRC = $(wildcard src/*.c)
@@ -10,7 +10,7 @@ TARGET_EXE = build/monny
 
 all: $(TARGET_EXE)
 
-$(TARGET_EXE): $(OBJ)
+$(TARGET_EXE): $(OBJ) | build
 	$(CC) $(OBJ) -o $(TARGET_EXE) $(LDFLAGS)
 
 objs/%.o: src/%.c | objs
