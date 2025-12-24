@@ -1,5 +1,7 @@
 # MonnyLang
 
+## Tudo descrito será o que ela será quando tiver em um nível mais alto de desenvolvimento
+
 MonnyLang é uma **linguagem de scripting leve**, escrita em **C**, projetada para ser **embutida em aplicações e game engines**, com foco em **simplicidade**, **controle de memória** e **desempenho previsível**.
 
 Ela foi desenvolvida como parte de uma game engine própria, permitindo a criação de lógica de jogo e scripts sem comprometer performance ou depender de runtimes externos.
