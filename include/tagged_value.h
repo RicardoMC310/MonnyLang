@@ -31,7 +31,7 @@ typedef struct
 #define AS_BOOLEAN(obj) (obj.as.boolean)
 #define AS_NULL(obj) (obj.as.null)
 
-#define MAKE_NUMBER(number) ((tagged_value_t){.type = TV_NUMBER, .as.number = number})
-#define MAKE_STRING(str) ((tagged_value_t){.type = TV_STRING, .as.str = str})
-#define MAKE_BOOLEAN(boolean) ((tagged_value_t){.type = TV_BOOLEAN, .as.boolean = boolean})
+#define MAKE_NUMBER(value) ((tagged_value_t){.type = TV_NUMBER, .as.number = (value)})
+#define MAKE_STRING(value) ((tagged_value_t){.type = TV_STRING, .as.str = (value)})
+#define MAKE_BOOLEAN(value) ((tagged_value_t){.type = TV_BOOLEAN, .as.boolean = (value)})
 #define MAKE_NULL() ((tagged_value_t){.type = TV_NULL, .as.ptr = ((void *)0)})
