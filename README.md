@@ -1,5 +1,7 @@
 # MonnyLang
 
+![Static Badge](https://img.shields.io/badge/Parado-%2523?style=flat-square&color=%23FF8811)
+
 ## Tudo descrito será o que ela será quando tiver em um nível mais alto de desenvolvimento
 
 MonnyLang é uma **linguagem de scripting leve**, escrita em **C**, projetada para ser **embutida em aplicações e game engines**, com foco em **simplicidade**, **controle de memória** e **desempenho previsível**.
